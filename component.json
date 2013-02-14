@@ -1,0 +1,9 @@
+{
+  "name": "backbone-relmodel",
+  "version": "1.0.0-rc.1",
+  "dependencies": {
+    "backbone": "~0.9.10",
+    "jquery": "~1.9.1",
+    "underscore": "~1.4.4"
+  }
+}

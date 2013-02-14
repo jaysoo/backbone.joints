@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Backbone-RelModel Example</title>
+  </head>
+  <body>
+    <h1>Demo</h1>
+
+    <div id="Library"></div>
+
+    <hr />
+
+    <h2>Source Code</h2>
+    <pre></pre>
+
+
+    <script src="../components/jquery/jquery.js"></script>
+    <script src="../components/underscore/underscore.js"></script>
+    <script src="../components/backbone/backbone.js"></script>
+    <script src="../lib/backbone.relmodel.js"></script>
+
+    <script id="SourceCode">
+      'use strict';
+
+      // Declare Models and Views
+      var Book = Backbone.Joints.Model.extend({
+        defaults: {
+          available: true
+        }
+      });
+
+      var Books = Backbone.Collection.extend({
+        model: Book
+      });
+
+      var Library = Backbone.Joints.Model.extend({
+        relations: {
+          books: {
+            relation: Backbone.Joints.hasMany(Books),
+            // Allows us to do `books.library`
+            reverseKey: 'library'
+          }
+        }
+      });
+
+      var BooksView = Backbone.View.extend({
+        tagName: 'ul',
+        template: _.template(
+            '<% _.each(books, function(book) { %><li>'
+          + '<strong><%= book.title %></strong> by <%= book.author %>'
+          + ' -- <% if (book.available) { %>Available<% } else { %>Unavailable<% } %>'
+          + '</li><% }); %>'),
+        initialize: function () {
+          _.bindAll(this, 'render');
+          this.listenTo(this.collection, 'change', this.render);
+        },
+        render: function () {
+          var html = this.template({books: this.collection.toJSON()})
+          this.$el.html(html);
+          return this;
+        },
+        remove: function () {
+          this.stopListening();
+        }
+      });
+
+      var LibraryView = Backbone.View.extend({
+        el: $('#Library'),
+        render: function () {
+          var $h1 = '<h2>' + this.model.get('name') + '</h2>';
+          this.$el.append($h1);
+
+          // Render books view
+          this.booksView = new BooksView({
+            collection: this.model.get('books')
+          }).render();
+          this.booksView.$el.appendTo(this.el);
+
+          return this;
+        }
+      });
+
+      // Initialize app
+      var books = new Books([
+        {
+          id: 1,
+          title: "The Hitchhiker's Guide to the Galaxy",
+          author: 'Douglas Adams'
+        },
+        {
+          id: 2,
+          title: 'The Restaurant at the End of the Universe',
+          author: 'Douglas Adams',
+          available: false
+        },
+        {
+          id: 3,
+          title: 'Life, the Universe and Everything',
+          author: 'Douglas Adams'
+        }
+      ]);
+
+      var library = new Library({
+        name: 'Toronto Reference Library',
+        books: [1, 2, 3]
+      });
+
+      var libraryView = new LibraryView({
+        model: library
+      }).render();
+    </script>
+
+    <script>
+      'use strict';
+
+      $('pre').text($('#SourceCode').text());
+    </script>
+  </body>
+</html>

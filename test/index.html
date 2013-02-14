@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Mocha Spec Runner</title>
+  <link rel="stylesheet" href="lib/mocha/mocha.css">
+  <script src="lib/mocha/mocha.js"></script>
+  <!-- assertion framework -->
+  <script src="lib/chai.js"></script>
+  <!-- mock framework -->
+  <script src="lib/sinon.js"></script>
+</head>
+<body>
+  <div id="mocha"></div>
+  <div id="test"></div>
+
+  <script>
+    // Mocha setup.
+    mocha.setup({ui: 'bdd', globals: ['_', '$', 'jQuery*', 'Backbone', 'XMLHttpRequest', 'LiveReload']});
+
+    // Export BDD functions.
+    window.expect = chai.expect;
+  </script>
+
+  <!-- dependencies -->
+  <script src="../components/underscore/underscore.js"></script>
+  <script src="../components/backbone/backbone.js"></script>
+
+  <!-- module to test -->
+  <script src="../lib/backbone.relmodel.js"></script>
+
+  <!-- specs -->
+  <script src="spec/backbone.relmodel.spec.js"></script>
+
+  <!-- trigger the mocha runner -->
+  <script>
+    if (navigator.userAgent.indexOf('PhantomJS') < 0) {
+      mocha.run();
+    } 
+  </script>
+</body>
+</html>
