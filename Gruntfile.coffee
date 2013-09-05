@@ -1,23 +1,29 @@
-path = require 'path'
-livereloadSnippet = require('grunt-contrib-livereload/lib/utils').livereloadSnippet
+LIVERELOAD_PORT = 35729
+lrSnippet = require('connect-livereload')({port: LIVERELOAD_PORT})
+mountFolder = (connect, dir) -> connect.static(require('path').resolve(dir));
 
-folderMount = (connect, point) -> connect.static(path.resolve(point))
+# Project configuration
+# ---------------------
+projectConfig =
+  app: 'app'
+  components: 'components'
+  release: 'lib'
+  test: 'test'
+
 
 module.exports = (grunt) ->
+  # Shows time elapsed
+  require('time-grunt')(grunt)
+
+  # Loads tasks
+  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks)
+
   # Grunt configuration:
   #
   # https://github.com/cowboy/grunt/blob/master/docs/getting_started.md
   #
   grunt.initConfig
-
-    # Project configuration
-    # ---------------------
-    project:
-      src: 'src'
-      components: 'components'
-      release: 'lib'
-      test: 'test'
-
+    project: projectConfig
 
     # Task configurations
     # -------------------
@@ -26,15 +32,13 @@ module.exports = (grunt) ->
     coffee:
       compile:
         files:
-          '<%= project.release %>/backbone.relmodel.js': '<%= project.src %>/backbone.relmodel.coffee'
-          '<%= project.test %>/spec/backbone.relmodel.spec.js': '<%= project.test %>/spec/backbone.relmodel.spec.coffee'
+          '<%= project.release %>/backbone.joints.js': '<%= project.app %>/backbone.joints.coffee'
+          '<%= project.test %>/spec/backbone.joints.spec.js': '<%= project.test %>/spec/backbone.joints.spec.coffee'
 
     # Runs a test server
-    connect:
+    open:
       server:
-        options:
-          port: 9001
-          middleware: (connect, options) -> [livereloadSnippet, folderMount(connect, '.')]
+        path: 'http://0.0.0.0:<%= connect.options.port %>/example'
 
     # Headless testing through PhantomJS
     mocha:
@@ -43,25 +47,37 @@ module.exports = (grunt) ->
         options:
           run: true
 
+    connect:
+      options:
+        port: 9000,
+        hostname: '0.0.0.0'
+      livereload:
+        options:
+          middleware: (connect) -> [
+              lrSnippet,
+              mountFolder(connect, '.')
+            ]
+
     # Watch configuration
-    regarde:
+    watch:
+      options:
+        nospawn: true
       scripts:
         files: ['**/*.coffee']
-        tasks: ['coffee', 'livereload']
+        tasks: ['coffee']
         spawn: true
-      html:
-        files: '**/*.html'
-        tasks: ['livereload']
-
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
-  grunt.loadNpmTasks 'grunt-contrib-connect'
-  grunt.loadNpmTasks 'grunt-contrib-livereload'
-  grunt.loadNpmTasks 'grunt-mocha'
-  grunt.loadNpmTasks 'grunt-regarde'
+      livereload:
+        options:
+          livereload: LIVERELOAD_PORT
+        files: [
+          '<%= project.app %>/*.html'
+          '<%= project.components %>/scripts/{,*/}*.js'
+          '<%= project.test %>/scripts/{,*/}*.js'
+        ]
 
 
   # Aliases
   # -------
   grunt.registerTask 'build', ['coffee']
   grunt.registerTask 'test', ['build', 'mocha']
-  grunt.registerTask 'default', ['build', 'livereload-start', 'connect', 'regarde']
+  grunt.registerTask 'default', ['build', 'connect:livereload', 'open', 'watch']
